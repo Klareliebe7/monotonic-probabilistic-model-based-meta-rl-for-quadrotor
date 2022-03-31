@@ -55,6 +55,7 @@ class DynamicModel(Model):
             a = data[2] # action
             label = data[3] # here label means the (next state - state) [state dim]
             data = np.concatenate((s, a), axis=0) # [state dim + action dim]
+            print(data.shape)
             data_torch = CUDA(torch.Tensor(data))
             label_torch = CUDA(torch.Tensor(label))
             data_list.append([data_torch, label_torch])
@@ -62,9 +63,11 @@ class DynamicModel(Model):
 
     def predict(self, s, a):
         # convert to torch format
-        s = CUDA(torch.tensor(s).float())
-        a = CUDA(torch.tensor(a).float())
-        inputs = torch.cat((s, a), axis=1)
+        data = np.concatenate((s, a), axis=0)
+        inputs = CUDA(torch.tensor(data).float())
+        
+         
+        #inputs = torch.cat((s, a), axis=1)
         with torch.no_grad():
             delta_state = self.model(inputs)
             delta_state = CPU(delta_state).numpy()

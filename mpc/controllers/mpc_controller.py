@@ -42,7 +42,7 @@ class MPC(object):
             self.reward_model = reward_model
             self.optimizer.setup(self.cost_function)
         else:
-            self.optimizer.setup(self.quadrotor_cost_function) # default cost function 啊！ 这里作修改
+            self.optimizer.setup(self.quadrotor_cost_function) # default cost function ###TODO 这里作修改
         self.reset()
 
     def reset(self):
@@ -201,7 +201,7 @@ class MPC(object):
             @param numpy array - cost : length should be of batch_size
         """
  
-        target_point = np.tile(target_point,(len(state[:,0]),1))#make target_point size of batch_size*3 啊！ 
+        target_point = np.tile(target_point,(len(state[:,0]),1))#make target_point size of batch_size*3 ###TODO 
         x_target,y_target,z_target = target_point[:, 0], target_point[:, 1], target_point[:, 2]
         x, y, z = state[:, 3], state[:, 4], state[:, 5]
         x_dot, y_dot, z_dot = state[:, 0], state[:, 1], state[:, 2]

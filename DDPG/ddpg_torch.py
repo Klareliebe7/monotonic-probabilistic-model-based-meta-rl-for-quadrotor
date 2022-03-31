@@ -17,7 +17,7 @@ class Agent():
         self.beta = beta
 
         self.memory = ReplayBuffer(max_size, input_dims, n_actions)
-
+        self.last_memory = ReplayBuffer(int(max_size/5), input_dims, n_actions)#mbpo
         self.noise = OUActionNoise(mu=np.zeros(n_actions))
 
         self.actor = ActorNetwork(alpha, input_dims, fc1_dims, fc2_dims,
@@ -45,7 +45,12 @@ class Agent():
 
     def remember(self, state, action, reward, state_, done):
         self.memory.store_transition(state, action, reward, state_, done)
-
+    """4MBPO save the last play for model to sample and generate simulated trajectories."""
+    def remember_last_play(self, state, action, reward, state_, done,global_state_):
+        self.last_memory.store_transition(state, action, reward, state_, done,global_state = global_state_)
+    def reset_last_play(self):
+        self.last_memory.reset()
+    """4MBPO"""
     def save_models(self):
         self.actor.save_checkpoint()
         self.target_actor.save_checkpoint()

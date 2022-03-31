@@ -122,7 +122,7 @@ class Quadrotor(gym.Env):
 
     def reset(self):
         self.simulator.reset()
-        sensor_dict = self.simulator.get_sensor()   #### for mpc 啊！
+        sensor_dict = self.simulator.get_sensor()   #### for mpc ###TODO
         state_dict = self.simulator.get_state()
         self._update_state(sensor_dict, state_dict)
 
@@ -215,7 +215,39 @@ class Quadrotor(gym.Env):
 
         ndarray = np.array(ndarray, dtype=np.float32)
         return ndarray
+    def _get_reward_given_obs(self,obs):
+        
+        reward = 0.5# half of max
+        if self.task == 'hovering_control':
+            task_reward =   self.healthy_reward
+            sensor_dict = env.simulator.get_sensor()
+            pitch,roll,yaw =    obs[-4] ,obs[-3],obs[-2] 
+            velocity_norm = np.linalg.norm(
+                obs[0:2])#rotation wont change the norm of the velocity
+            angular_velocity_norm = np.linalg.norm(
+                obs[9:11])
+            
+            # TODO: you may find better ones!
+            alpha, beta = 1.0, 1.0
+            hovering_range, in_range_r, out_range_r = 0.5, 10, -20
+            """speed and angular_speed reward"""
+            task_reward -= alpha * velocity_norm + beta * angular_velocity_norm
+            # alpha*speed + beta*angular_speed
+            """vertical dist reward"""
+            z_move = abs(self.pos_0[2] - obs[-1])#init z - sensor.z
+            
+            task_reward += 10*(1-z_move**0.5)
+            """pitch roll reward"""
+            task_reward += 5 - 5/3.1415*roll
+            task_reward += 5 - 5/3.1415*pitch
+            # if z_move < hovering_range:
+                # task_reward += in_range_r
+            # else:
+                # task_reward += max(out_range_r, hovering_range - z_move)
 
+            reward += task_reward
+
+        return reward
     def _get_reward(self, collision=False, velocity_target=(0.0, 0.0, 0.0)):
         """
         Reward function setting for different tasks.
@@ -232,7 +264,7 @@ class Quadrotor(gym.Env):
         elif self.task == 'hovering_control':
             task_reward = 0.0 if collision else self.healthy_reward
             sensor_dict = env.simulator.get_sensor()
-            pitch,roll,yaw =    sensor_dict["pitch"]+0.0001,sensor_dict["roll"],sensor_dict["yaw"] 
+            pitch,roll,yaw =    sensor_dict["pitch"] ,sensor_dict["roll"],sensor_dict["yaw"] 
             velocity_norm = np.linalg.norm(
                 self.simulator.global_velocity)
             angular_velocity_norm = np.linalg.norm(
@@ -399,8 +431,8 @@ if __name__ == '__main__':
     """
     NN pretrain
     """
-    # 啊！: add meta learning here, need to make several different env with different mass and inertia 
-    pretrain_episodes = 20
+    # ###TODO: add meta learning here, need to make several different env with different mass and inertia 
+    pretrain_episodes = 1
     print(f"NN pretraining with {pretrain_episodes} episodes............")
     if False:
         for epi in range(pretrain_episodes):
@@ -427,8 +459,9 @@ if __name__ == '__main__':
     print(f"    learn policy and dynamic model recursivly")
     test_episode = 3
     test_epoch = 20
-    # rollout = 5
-    # sample = /
+    rollout = 5
+    sample_ratio = 1/5
+    MBPO_ACTIVATE = True
     for ep in range(test_epoch):
         print('epoch: ', ep)
         
@@ -442,26 +475,49 @@ if __name__ == '__main__':
                 i+= 1
                 #action = np.array([mpc_controller.act(model=model, state=obs)])
                 action = agent.choose_action(obs)#DDPG
-                action =  (action+np.array([1.1,1.1,1.1,1.1]))*7.45
+                action =  np.clip((action+np.array([1.1,1.1,1.1,1.1]))*7.45,0.1,15)
                 obs_next, reward, reset, _ = env.step(action)
-                sensor_dict = env.simulator.get_sensor()
-                #state_dict = env.simulator.get_state()
-                #print(f"state_dict:{state_dict}")
-                print(f"pitch:{sensor_dict['pitch']},roll:{sensor_dict['roll']},yaw:{sensor_dict['yaw']}")
                 agent.remember(obs, action, reward, obs_next, reset)#DDPG
+                if MBPO_ACTIVATE:
+                    agent.remember_last_play(obs, action, reward, obs_next, reset,global_state_=env.simulator._save_state())#MBPO
                 agent.learn()#DDPG
                 model.add_data_point([0, obs, action, obs_next - obs])
-                if args.train_reward_model: 
-                    reward_model.add_data_point([0, obs_next, action, [reward]])
                 obs = obs_next
                 acc_reward += reward    
-                    
+                sensor_dict = env.simulator.get_sensor()
+                state_dict = env.simulator.get_state()
                 if args.render:
                     env.render(action)
-                #print('---------- step %s ----------' % i)
-                #print('obs_next:', obs_next)
+                print('---------- step %s ----------' % i)
+                print('observastion:', obs_next)
                 #print('info:', _)
-                print(f'test_episode:{epi},reward:{ reward:.2f}')
+                #print(f'test_episode:{epi},reward:{ reward:.2f}')
+                print(f"global_state:{env.simulator._save_state()}")
+                print(f"sensor_dict:{sensor_dict}")
+                print(f"state_dict:{state_dict}")              
+                
+            """ MBPO"""
+            if MBPO_ACTIVATE:
+                # got sample_ratio*i samples from trajectory
+                states, actions, rewards, states_, dones,global_states = agent.last_memory.sample_buffer(int(sample_ratio*i),with_global_state = True)
+                # for each sample start a simulation
+                for ii in range(int(sample_ratio*i)):
+                    obs, action, reward, state_, reset,global_state = states[ii], actions[ii], rewards[ii], states_[ii], dones[ii],global_states[ii]
+     
+                    obs_next = model.predict(obs, action) + obs 
+                    obs = np.array(obs_next, dtype=np.float32)
+                    for j  in range(rollout):
+                        action = agent.choose_action(obs)#DDPG
+                        action =  np.clip((action+np.array([1.1,1.1,1.1,1.1]))*7.45,0.1,15)
+                        reward = env._get_reward_given_obs(obs)
+                        obs_next = model.predict(obs, action) + obs
+                         
+                        agent.remember(obs, action, reward, obs_next, reset)#DDPG
+                        agent.learn()#DDPG
+                        obs = obs_next
+     
+                agent.reset_last_play()
+            """ MBPO"""        
             
             #env.close()
             print('total reward: ', acc_reward)

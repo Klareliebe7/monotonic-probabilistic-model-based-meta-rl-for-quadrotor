@@ -23,9 +23,9 @@ class DynamicModel(Model):
         model_config = NN_config["model_config"]
         training_config = NN_config["training_config"]
         
-        self.state_dim = model_config["state_dim"]#啊！ to be checked in env print msg
-        self.action_dim = model_config["action_dim"]# 4 
-        self.input_dim = self.state_dim+self.action_dim# sum nice
+        self.state_dim = model_config["state_dim"] 
+        self.action_dim = model_config["action_dim"] 
+        self.input_dim = self.state_dim+self.action_dim# 
 
         self.n_epochs = training_config["n_epochs"]
         self.lr = training_config["learning_rate"]
@@ -55,6 +55,7 @@ class DynamicModel(Model):
             a = data[2] # action
             label = data[3] # here label means the (next state - state) [state dim]
             data = np.concatenate((s, a), axis=0) # [state dim + action dim]
+            print(data.shape)
             data_torch = CUDA(torch.Tensor(data))
             label_torch = CUDA(torch.Tensor(label))
             data_list.append([data_torch, label_torch])
@@ -64,6 +65,8 @@ class DynamicModel(Model):
         # convert to torch format
         s = CUDA(torch.tensor(s).float())
         a = CUDA(torch.tensor(a).float())
+        print(s.shape)
+        print(a.shape)
         inputs = torch.cat((s, a), axis=1)
         with torch.no_grad():
             delta_state = self.model(inputs)

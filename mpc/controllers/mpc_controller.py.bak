@@ -51,9 +51,9 @@ class MPC(object):
         Returns: None
         """
         #print('set init mean to 0')
-        self.prev_sol = np.tile((self.action_low + self.action_high) / 2, [4])
+        self.prev_sol = np.tile((self.action_low + self.action_high) / 2, [1])
         #问题是：obtain 的mean 应该是 popsize * soldim， 但是这里的horizen 不对
-        self.init_var = np.tile(np.square(self.action_low - self.action_high) / 16, [4])
+        self.init_var = np.tile(np.square(self.action_low - self.action_high) / 16, [1])
 
     def act(self, model, state):
         '''
