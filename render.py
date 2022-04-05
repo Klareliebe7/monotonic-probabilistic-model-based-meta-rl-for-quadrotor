@@ -538,7 +538,7 @@ class RenderWindow(pyglet.window.Window):
                 self.internal_map.process_entire_queue()
             self.sector = sector
 
-    def view(self, drone_state, dt,action, expected_velocity=None):
+    def view(self, drone_state, dt,action, expected_velocity=None,normal_speed = True):
         # NOTE: because sim coord is (x => left, y => inner, z => up),
         # gl coord is (x => left, y => up, z => outer),
         # we remap gl-y to sim-z, gl-z to sim-y, then reverse sim-y
@@ -577,9 +577,9 @@ class RenderWindow(pyglet.window.Window):
         
         self.dispatch_events()
         self.flip()
-
-        time.sleep(dt)
-
+        if normal_speed:        
+            time.sleep(dt)
+		 
     def _setup_2d(self):
         w, h = self.get_size()
         gl.glDisable(gl.GL_DEPTH_TEST)

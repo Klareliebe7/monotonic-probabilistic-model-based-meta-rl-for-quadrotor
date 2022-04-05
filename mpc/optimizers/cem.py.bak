@@ -1,9 +1,6 @@
 '''
-@Author: Zuxin Liu
-@Email: zuxinl@andrew.cmu.edu
-@Date:   2020-03-24 01:03:52
-@LastEditTime: 2020-04-22 22:06:12
-@Description:
+@Author: Zhengkun Li
+@Email: 1st.melchior@gmail.com
 '''
 
 from __future__ import division
@@ -74,28 +71,32 @@ class CEMOptimizer(Optimizer):
             ----------
                 @param tensor - x : size should be (popsize x sol_dim)
             '''
-            uniform = torch.rand(shape)
+            uniform = torch.rand(shape)# 1000, 60, 4
             normal = torch.distributions.normal.Normal(0, 1)
-
-            alpha = (a - mu) / sigma
-            beta = (b - mu) / sigma
-
-            alpha_normal_cdf = normal.cdf(alpha)
-            p = alpha_normal_cdf + (normal.cdf(beta) - alpha_normal_cdf) * uniform
-
+             
+            alpha = (a - mu) / sigma# 60,4
+            beta = (b - mu) / sigma# 60,4
+ 
+            alpha_normal_cdf = normal.cdf(alpha)# 60,4
+ 
+            p = alpha_normal_cdf + (normal.cdf(beta) - alpha_normal_cdf) * uniform# 1000,60,4
+            # print(f"p size = {p.shape}")
             p = p.numpy()
             one = np.array(1, dtype=p.dtype)
             epsilon = np.array(np.finfo(p.dtype).eps, dtype=p.dtype)
             v = np.clip(2 * p - 1, -one + epsilon, one - epsilon)
             x = mu + sigma * np.sqrt(2) * torch.erfinv(torch.from_numpy(v))
-            x = torch.clamp(x, a[0], b[0])
+            x = torch.clamp(x, a[0][0], b[0][0])
+            # print(f"a[][] = {a[0][0]}")
+            # print(f"b[][] = {b[0][0]}")
+            # print(f'sample_truncated_normal returned shize{x.shape}')
             return x
         self.sample_trunc_norm = sample_truncated_normal
 
     def reset(self):
         pass
 
-    def obtain_solution(self, init_mean, init_var, use_pytorch=False, debug=False):
+    def obtain_solution(self, init_mean, init_var, use_pytorch=True, debug=False):
         """
         Optimizes the cost function using the provided initial candidate distribution parameters
 
@@ -114,7 +115,7 @@ class CEMOptimizer(Optimizer):
 
         if use_pytorch:
             a, b = torch.tensor([self.lb]*self.sol_dim), torch.tensor([self.ub]*self.sol_dim)
-            size = [self.popsize, self.sol_dim]
+            size = [self.popsize, self.sol_dim,4]
         else:
             X = stats.truncnorm(-2, 2, loc=np.zeros_like(mean), scale=np.ones_like(mean))
 
@@ -124,9 +125,9 @@ class CEMOptimizer(Optimizer):
             var_list = []
 
         while (t < self.max_iters) and np.max(var) > self.epsilon:
-            #print(f"size of mean={mean.size()}")
-            print(f"size of self.lb={self.lb.size()}")
-            print(f"size ofself.ub={self.ub.size()}")
+            # print(f"size of mean={mean }")
+            # print(f"size of self.lb={self.lb }")
+            # print(f"size ofself.ub={self.ub }")
             lb_dist, ub_dist = mean - self.lb, self.ub - mean
             constrained_var = np.minimum(np.minimum(np.square(lb_dist / 2), np.square(ub_dist / 2)), var)
 
@@ -139,10 +140,12 @@ class CEMOptimizer(Optimizer):
                 samples = samples.astype(np.float32)
 
             costs = self.cost_function(samples)
+            print(f"costs mean  = {np.mean(costs)}")
             idx = np.argsort(costs)
+            print(f"choosed cost  mean ========================================================================{np.mean(costs[idx][:self.num_elites])}")
             elites = samples[idx][:self.num_elites]
-            print("MPC elite sample cost sort:")
-            print(np.sort(costs)[:self.num_elites])
+            # print("MPC elite sample cost sort:")
+            # print(np.sort(costs)[:self.num_elites])
 
             new_mean = np.mean(elites, axis=0)
             new_var = np.var(elites, axis=0)
@@ -166,6 +169,7 @@ class CEMOptimizer(Optimizer):
             axs[2].plot(var_list)
             name = time.time()
             name = str(name)
+            
             plt.savefig("./"+name+".png")
             plt.close()
         return sol, solvar

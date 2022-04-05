@@ -46,16 +46,23 @@ class Agent():
     def remember(self, state, action, reward, state_, done):
         self.memory.store_transition(state, action, reward, state_, done)
     """4MBPO save the last play for model to sample and generate simulated trajectories."""
-    def remember_last_play(self, state, action, reward, state_, done,global_state):
-        self.last_memory.store_transition(state, action, reward, state_, done,global_state)
+    def remember_last_play(self, state, action, reward, state_, done,global_state_):
+        self.last_memory.store_transition(state, action, reward, state_, done,global_state = global_state_)
     def reset_last_play(self):
         self.last_memory.reset()
     """4MBPO"""
-    def save_models(self):
-        self.actor.save_checkpoint()
-        self.target_actor.save_checkpoint()
-        self.critic.save_checkpoint()
-        self.target_critic.save_checkpoint()
+    def save_models(self,name = None):
+        if name:
+            self.actor.save_checkpoint(name = name)
+            self.target_actor.save_checkpoint(name = name)
+            self.critic.save_checkpoint(name = name)
+            self.target_critic.save_checkpoint(name = name)
+        else:
+            self.actor.save_checkpoint()
+            self.target_actor.save_checkpoint()
+            self.critic.save_checkpoint()
+            self.target_critic.save_checkpoint()
+
 
     def load_models(self):
         self.actor.load_checkpoint()

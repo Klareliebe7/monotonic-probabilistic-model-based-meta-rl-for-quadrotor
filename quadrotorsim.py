@@ -1,3 +1,7 @@
+'''
+@Author: Zhengkun Li
+@Email: 1st.melchior@gmail.com
+'''
 import json
 import numpy as np
 
@@ -125,9 +129,10 @@ class QuadrotorSim(object):
         prop_torque = np.zeros(3).astype(np.float32)
         prop_powers = np.zeros(4).astype(np.float32)
         me = np.zeros(4).astype(np.float32)
-
+        
         for i in range(4):
             eff_act = act[i]
+            #print(eff_act)
             if eff_act > self._max_voltage:
                 eff_act = self._max_voltage
             elif eff_act < self._min_voltage:
@@ -220,10 +225,20 @@ class QuadrotorSim(object):
            self._fail_max_angular_velocity:
             raise Exception('The quadrotor has too large angular velocity')
 
-    def get_config(self, config_file):
+    def get_config(self, config_file,quality = None):
         with open(config_file, 'r') as f:
             self.cfg = json.load(f)
-
+ 
+        if quality: 
+            self.cfg["quality"] = quality
+            ratio_ = quality/0.5
+            self.cfg["inertia"]['xx']= ratio_*0.0135
+            self.cfg["inertia"]['xy']= 0.0 
+            self.cfg["inertia"]['xz']= 0.0
+            self.cfg["inertia"]['yy']= ratio_*0.0135
+            self.cfg["inertia"]['yz']= 0.0
+            self.cfg["inertia"]['zz']= ratio_*0.024
+ 
         try:
             self._parse_cfg()
         except Exception as e:

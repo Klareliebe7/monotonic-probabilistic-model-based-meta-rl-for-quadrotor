@@ -4,7 +4,7 @@ gym_config:
     subtask_episode: 3           # the number of episode for each subtask
     subtask_episode_length: 200  # the length of each episode
     task_episode: 100            # the number of the task episode
-    seed: 1000                   # seed for all environments
+    seed: 1001                   # seed for all environments
     dynamics_name: [             # name of all environments
         'Quadrotor',
     ]
@@ -55,7 +55,7 @@ NN_config:
         save_model_flag: False
         save_model_path: ".storage/exp_1.ckpt" # the path to save the model
         validation_flag: True
-        validation_freq: 50      # the frequency of validation
+        validation_freq: 1       # the frequency of validation
         validation_ratio: 0.2    # ratio of validation set
 
 reward_config:

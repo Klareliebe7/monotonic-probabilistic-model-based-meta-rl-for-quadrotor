@@ -51,17 +51,30 @@ class Agent():
     def reset_last_play(self):
         self.last_memory.reset()
     """4MBPO"""
-    def save_models(self):
-        self.actor.save_checkpoint()
-        self.target_actor.save_checkpoint()
-        self.critic.save_checkpoint()
-        self.target_critic.save_checkpoint()
+    def save_models(self,name = None):
+        if name:
+            self.actor.save_checkpoint(name = name+"actor")
+            self.target_actor.save_checkpoint(name = name+"target_actor")
+            self.critic.save_checkpoint(name = name+"critic")
+            self.target_critic.save_checkpoint(name = name+"target_critic")
+        else:
+            self.actor.save_checkpoint()
+            self.target_actor.save_checkpoint()
+            self.critic.save_checkpoint()
+            self.target_critic.save_checkpoint()
 
-    def load_models(self):
-        self.actor.load_checkpoint()
-        self.target_actor.load_checkpoint()
-        self.critic.load_checkpoint()
-        self.target_critic.load_checkpoint()
+
+    def load_models(self,name = None):
+        if name:
+            self.actor.load_checkpoint(name = name)
+            self.target_actor.load_checkpoint(name = name)
+            self.critic.load_checkpoint(name = name)
+            self.target_critic.load_checkpoint(name = name)
+        else:
+            self.actor.load_checkpoint()
+            self.target_actor.load_checkpoint()
+            self.critic.load_checkpoint()
+            self.target_critic.load_checkpoint()
 
     def learn(self):
         if self.memory.mem_cntr < self.batch_size:

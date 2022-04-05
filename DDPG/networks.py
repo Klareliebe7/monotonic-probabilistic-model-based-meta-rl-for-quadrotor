@@ -66,14 +66,19 @@ class CriticNetwork(nn.Module):
 
         return state_action_value
 
-    def save_checkpoint(self):
-        print('... saving checkpoint ...')
-        T.save(self.state_dict(), self.checkpoint_file)
-
-    def load_checkpoint(self):
-        print('... loading checkpoint ...')
-        self.load_state_dict(T.load(self.checkpoint_file))
-
+    def save_checkpoint(self,name = None):
+        print('... saving cr checkpoint ...')
+        if name:
+            T.save(self.state_dict(), name)
+        else:
+            T.save(self.state_dict(), self.checkpoint_file)
+    def load_checkpoint(self,name = None):
+        print('... loading cr checkpoint ...')
+        if name:
+            self.load_state_dict(T.load(name))
+        else:
+            self.load_state_dict(T.load(self.checkpoint_file))
+ 
     def save_best(self):
         print('... saving best checkpoint ...')
         checkpoint_file = os.path.join(self.checkpoint_dir, self.name+'_best')
@@ -131,14 +136,18 @@ class ActorNetwork(nn.Module):
         
         return x
 
-    def save_checkpoint(self):
-        print('... saving checkpoint ...')
-        T.save(self.state_dict(), self.checkpoint_file)
-
-    def load_checkpoint(self):
-        print('... loading checkpoint ...')
-        self.load_state_dict(T.load(self.checkpoint_file))
-
+    def save_checkpoint(self,name = None):
+        print('... saving ac checkpoint ...')
+        if name:
+            T.save(self.state_dict(), name)
+        else:
+            T.save(self.state_dict(), self.checkpoint_file)
+    def load_checkpoint(self,name = None):
+        print('... loading ac checkpoint ...')
+        if name:
+            self.load_state_dict(T.load(name))
+        else:
+            self.load_state_dict(T.load(self.checkpoint_file))
     def save_best(self):
         print('... saving best checkpoint ...')
         checkpoint_file = os.path.join(self.checkpoint_dir, self.name+'_best')
