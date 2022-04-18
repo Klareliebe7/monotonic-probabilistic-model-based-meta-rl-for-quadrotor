@@ -1,3 +1,7 @@
+'''
+@Author: Zhengkun Li
+@Email: 1st.melchior@gmail.com
+'''
 import json
 import numpy as np
 
@@ -288,10 +292,12 @@ class QuadrotorSim(object):
         imu_acc = self.body_acceleration + \
             np.matmul(self._coordination_converter_to_body, gravity_acc)
         imu_gyro = self.body_angular_velocity
-        barometer = self.global_position[2]
+        barometer = self.global_position 
         pitch, roll, yaw = self._get_pitch_roll_yaw()
         return {
-            'z': barometer,
+            'x': barometer[0],
+            'y': barometer[1],
+            'z': barometer[2],
             'acc_x': imu_acc[0],
             'acc_y': imu_acc[1],
             'acc_z': imu_acc[2],
@@ -314,17 +320,12 @@ class QuadrotorSim(object):
         for _ in range(times):
             self._run_internal(act)
 
-    def define_velocity_control_task(self, dt, nt, seed):
-        np.random.seed(seed)
+    def define_approching_task(self, dt, nt, start_global_point,end_global_point):
+        print(f"Starting point:{start_global_point} ")
+        print(f"Approching point:{end_global_point} ")
         current_state = self._save_state()
-
-        velocity_lst = []
-        for _ in range(nt):
-            act = np.random.uniform(
-                low=self._min_voltage, high=self._max_voltage, size=4)
-            act = act.astype(np.float32)
-            self.step(act, dt)
-            velocity_lst.append(list(self.global_velocity))
-
+        waypoint_lst = []
+        for i in range(nt):
+            waypoint_lst.append(list((end_global_point-start_global_point)*i/nt))
         self._restore_state(current_state)
-        return velocity_lst
+        return waypoint_lst

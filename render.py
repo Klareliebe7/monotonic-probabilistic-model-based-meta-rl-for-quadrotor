@@ -117,14 +117,14 @@ class Map(object):
         self._initialize(init_drone_z)
 
     def _initialize(self, init_drone_z):
-        if self.task in ['no_collision', 'hovering_control']:
+        if self.task in ['no_collision', 'hovering_control',"approching"]:
             h = w = 100
             for y in range(0, h):
                 for x in range(0, w):
                     # Pave the floor
                     self._add_block((x, y, 0), TILE, immediate=False)
-        elif self.task == 'velocity_control':
-            h = w = 0
+        #elif self.task == 'velocity_control':
+            #h = w = 0
 
         self.drone_pos = [h // 2, w // 2, init_drone_z]
         self._add_drone()

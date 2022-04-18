@@ -17,7 +17,7 @@ class Agent():
         self.beta = beta
 
         self.memory = ReplayBuffer(max_size, input_dims, n_actions)
-        self.last_memory = ReplayBuffer(int(max_size/5), input_dims, n_actions)#mbpo
+        self.last_memory = ReplayBuffer(10000, input_dims, n_actions)#mbpo
         self.noise = OUActionNoise(mu=np.zeros(n_actions))
 
         self.actor = ActorNetwork(alpha, input_dims, fc1_dims, fc2_dims,

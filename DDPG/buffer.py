@@ -23,7 +23,7 @@ class ReplayBuffer():
             self.global_state_memory[index] = global_state
         self.mem_cntr += 1
 
-    def sample_buffer(self, batch_size,with_global_state = False):
+    def sample_buffer(self, batch_size,with_global_state = False,with_batch_nr = False):
         max_mem = min(self.mem_cntr, self.mem_size)
 
         batch = np.random.choice(max_mem, batch_size)
@@ -38,6 +38,8 @@ class ReplayBuffer():
             for ii in batch:
                 global_state.append(self.global_state_memory[ii])
             return states, actions, rewards, states_, dones,global_state
+        if with_batch_nr :
+            return states, actions, rewards, states_, dones,batch
         return states, actions, rewards, states_, dones
 
     def reset(self):

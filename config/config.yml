@@ -25,8 +25,8 @@ mpc_config:
         init_var: 10
         particle: 1
     CEM:
-        horizon: 15                # how long of the horizon to predict
-        popsize: 1000               # how many random samples for mpc
+        horizon: 1                # how long of the horizon to predict
+        popsize: 50000               # how many random samples for mpc
         particle: 1                # number of particles to enlarge
         gamma: 1                   # reward discount coefficient
         action_low: [0.1]           # lower bound of the solution space

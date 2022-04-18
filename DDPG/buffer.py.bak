@@ -47,4 +47,4 @@ class ReplayBuffer():
             self.action_memory = np.zeros((self.mem_size,  self.n_actions))
             self.reward_memory = np.zeros(self.mem_size)
             self.terminal_memory = np.zeros(self.mem_size, dtype=np.bool)
-            self.global_state_memory = [0 for _ in range(max_size)]
+            self.global_state_memory = [0 for _ in range(self.mem_size)]

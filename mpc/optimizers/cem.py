@@ -96,7 +96,7 @@ class CEMOptimizer(Optimizer):
     def reset(self):
         pass
 
-    def obtain_solution(self, init_mean, init_var, use_pytorch=True, debug=False):
+    def obtain_solution(self, init_mean, init_var, use_pytorch=True, debug=False,waypoints_horizon = None):
         """
         Optimizes the cost function using the provided initial candidate distribution parameters
 
@@ -138,9 +138,11 @@ class CEMOptimizer(Optimizer):
             else:
                 samples = X.rvs(size=[self.popsize, self.sol_dim]) * np.sqrt(constrained_var) + mean
                 samples = samples.astype(np.float32)
+            if waypoints_horizon:
 
-            costs = self.cost_function(samples)
- 
+                costs = self.cost_function(samples,waypoints_target = waypoints_horizon)
+            else:
+                costs = self.cost_function(samples)
             idx = np.argsort(costs)
             print(f"costs mean  = {np.mean(costs):.2f}choosed cost  mean {np.mean(costs[idx][:self.num_elites]):.2f}")
             elites = samples[idx][:self.num_elites]
